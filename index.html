@@ -32,8 +32,16 @@ main{max-width:1150px;margin:0 auto;padding:12px 20px 30px;display:grid;grid-tem
 .name{font-family:"Jua";font-size:22px;line-height:1.1}
 .meta{font-size:12.5px;color:var(--muted)}
 .top .ghost{margin-left:auto;font-size:18px}
-.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.board{position:relative;border-radius:16px;background:linear-gradient(#eaf4ff,#f3f9ec);padding:6px 8px 12px}
+.vine{display:block;width:62%;margin:0 auto -6px}
+.cluster{display:flex;flex-direction:column;align-items:center}
+.crow{display:flex;justify-content:center;gap:1.2%;width:100%}
+.crow+.crow{margin-top:-2.6%}
+.cluster .slot{width:17.6%;flex:none}
+.slot.empty{background:#fff;border:2.5px solid #c3aeea}
+.slot.empty b{font-family:"Jua";font-weight:400;color:#8d6fd0;font-size:clamp(12px,3.4vw,16px)}
 .slot{aspect-ratio:1;border-radius:50%;border:2px dashed var(--line);display:grid;place-items:center;user-select:none;position:relative}
+.slot.on{box-shadow:0 2px 0 rgba(80,50,140,.18)}
 .slot.on{border:none;cursor:pointer}
 .slot.on:hover{transform:scale(1.08)}
 .slot.new{animation:pop .4s ease}
@@ -93,7 +101,7 @@ const CONFIG = {
 };
 
 (function(){
-  const COLOR_STICKERS=["#ff5d5d","#ff8a3d","#ffc531","#9bd34a","#36c08a","#2fc4d4","#3d8bff","#6f6bff","#a564f0","#f05fb4","#c48a5a","#8a8f99"];
+  const COLOR_STICKERS=["#7a4cc6","#9b6fe0","#5b3a9e","#ff5d5d","#ff8a3d","#ffc531","#9bd34a","#36c08a","#2fc4d4","#3d8bff","#6f6bff","#a564f0","#f05fb4","#c48a5a","#8a8f99"];
   const EMOJI_STICKERS=["⭐","🌟","💖","👍","🏆","🎉","🍀","🌈","🔥","💯","🐣","🍭","🍞","🥐","🍩","🍇","🌻","😀"];
   const AVATAR_COLORS=["#ff8a5c","#5cb8ff","#6cc58b","#b48cf0","#f06c9b","#f2b33d","#3fbfb0","#8f9bff"];
   const root=document.getElementById("root");
@@ -167,6 +175,18 @@ const CONFIG = {
     }
     return '<div class="stk emoji">'+esc(code)+'</div>';
   }
+  const PATTERNS={10:[4,3,2,1],15:[5,4,3,2,1],20:[5,5,4,3,2,1],25:[4,5,4,5,4,2,1],30:[4,5,4,5,4,3,2,2,1]};
+  function clusterRows(n){
+    if(PATTERNS[n]) return PATTERNS[n].slice();
+    const up=[];let t=0,i=0;
+    while(t<n){const w=[1,2,3,4][i]||(i%2?4:5);up.push(w);t+=w;i++;}
+    up[up.length-1]-=t-n; if(up[up.length-1]<=0) up.pop();
+    return up.reverse();
+  }
+  const VINE='<svg class="vine" viewBox="0 0 160 40" aria-hidden="true"><path d="M80 40 C80 26 78 18 70 10" stroke="#8a5a36" stroke-width="5" fill="none" stroke-linecap="round"/>'+
+    '<path d="M70 12 C50 -2 26 6 22 22 C40 26 60 22 70 12Z" fill="#6cbf5a"/><path d="M70 12 C44 12 34 16 26 20" stroke="#4e9a40" stroke-width="1.5" fill="none"/>'+
+    '<path d="M76 16 C92 0 120 2 128 18 C112 26 90 26 76 16Z" fill="#82cf6c"/><path d="M76 16 C98 14 112 16 124 18" stroke="#5aa64a" stroke-width="1.5" fill="none"/>'+
+    '<path d="M86 30 q12 -6 8 -14 q-4 -6 4 -10" stroke="#6cbf5a" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
   const current=p=>data.stickers.filter(s=>s.personId===p.id&&s.board===p.boards);
   const find=id=>data.people.find(p=>p.id===id);
 
@@ -181,14 +201,14 @@ const CONFIG = {
       const cur=current(p), n=cur.length, done=n>=g, slots=[];
       for(let i=0;i<Math.max(g,n);i++){
         const s=cur[i];
-        slots.push(s?'<div class="slot on'+(s.id===lastNew?' new':'')+'" data-act="detail" data-id="'+esc(s.id)+'" title="'+esc(s.date+" · "+(s.reason||"")+(s.giver?" (from "+s.giver+")":""))+'">'+stk(s.sticker)+'</div>':'<div class="slot"></div>');
+        slots.push(s?'<div class="slot on'+(s.id===lastNew?' new':'')+'" data-act="detail" data-id="'+esc(s.id)+'" title="'+esc(s.date+" · "+(s.reason||"")+(s.giver?" (from "+s.giver+")":""))+'">'+stk(s.sticker)+'</div>':'<div class="slot empty"><b>'+(i+1)+'</b></div>');
       }
       const last=cur[n-1];
       h+='<section class="card'+(done?' done':'')+'">'+(p.boards?'<div class="badge">🏆 완성 '+p.boards+'판</div>':'')+
         '<div class="top"><div class="avatar" style="background:'+esc(p.color)+'">'+esc(p.name.length>2?p.name.slice(-2):p.name)+'</div>'+
         '<div><div class="name">'+esc(p.name)+'</div><div class="meta">'+n+' / '+g+' 개'+(done?' · 판 완성! 🎉':'')+'</div></div>'+
         '<button class="ghost" title="기록·관리" data-act="manage" data-id="'+esc(p.id)+'">⋯</button></div>'+
-        '<div class="grid">'+slots.join("")+'</div><div class="bar"><i style="width:'+Math.min(100,n/g*100)+'%"></i></div>'+
+        '<div class="board">'+VINE+'<div class="cluster">'+(()=>{let k=0;return clusterRows(slots.length).map(w=>'<div class="crow">'+slots.slice(k,k+=w).join("")+'</div>').join("");})()+'</div></div><div class="bar"><i style="width:'+Math.min(100,n/g*100)+'%"></i></div>'+
         '<div class="last">'+(last?'최근: '+esc(last.date.slice(5).replace("-","/"))+' '+esc(last.reason||"(사유 없음)"):'아직 스티커가 없어요')+'</div>'+
         '<div class="actions">'+(done?'<button class="primary" data-act="newBoard" data-id="'+esc(p.id)+'">새 판 시작</button>':'<button class="primary" data-act="give" data-id="'+esc(p.id)+'">⭐ 스티커 붙이기</button>')+'</div></section>';
     });
@@ -210,7 +230,7 @@ const CONFIG = {
 
   /* ---------- 창 ---------- */
   function giveDialog(p){
-    let tab=LS.get("tab","color"), sel=LS.get("lastSticker","c:#ffc531");
+    let tab=LS.get("tab","color"), sel=LS.get("lastSticker","c:#7a4cc6");
     dialog={focus:"reason",html(){
       const imgs=data.images||[];
       let opts="";
