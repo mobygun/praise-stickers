@@ -1,0 +1,10 @@
+# 칭찬스티커 판
+
+- 웹페이지: `index.html` (GitHub Pages로 공개)
+- 저장소: 구글 시트 「칭찬스티커 기록」 (Apps Script 웹앱으로 연결)
+- Apps Script 코드: `apps-script/Code.gs`
+
+## 바꾸는 법
+- PIN 변경: Apps Script 편집기에서 `changePin` 함수의 숫자를 바꾸고 ▶실행
+- Apps Script 코드를 고쳤다면: 배포 → 배포 관리 → 수정(연필) → 버전 "새 버전" → 배포 (주소는 그대로 유지)
+- 사람 추가/삭제, 목표 개수는 웹페이지에서 바로 바꿀 수 있어요.

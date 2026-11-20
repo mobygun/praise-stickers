@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>칭찬스티커 판</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap">
+<style>
+*{box-sizing:border-box}
+:root{--bg:#fff8ec;--ink:#3b2f2a;--muted:#8a7a70;--line:#f0e2cf;--accent:#ff8a5c;--accent2:#ffcf4a}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Gowun Dodum",system-ui,sans-serif;min-height:100vh}
+header{max-width:1150px;margin:0 auto;padding:28px 20px 8px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
+h1{font-family:"Jua",sans-serif;font-weight:400;font-size:34px;margin:0}
+h1 span{color:var(--accent)}
+.sub{color:var(--muted);font-size:14px;margin-top:4px}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button{font-family:inherit;cursor:pointer;border:none;border-radius:12px;padding:9px 14px;font-size:14px;background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}
+button:hover:not(:disabled){filter:brightness(.96)}
+button:disabled{opacity:.45;cursor:default}
+button.primary{background:var(--accent);color:#fff;box-shadow:none}
+button.ghost{background:transparent;box-shadow:none;color:var(--muted);padding:6px 8px}
+button.danger{background:#e2574c;color:#fff;box-shadow:none}
+select,input,textarea{font-family:inherit;font-size:15px;border-radius:12px;border:1.5px solid var(--line);padding:9px 11px;background:#fff;color:var(--ink);width:100%}
+.goal{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted);white-space:nowrap}
+.goal select{width:auto;padding:6px 8px}
+main{max-width:1150px;margin:0 auto;padding:12px 20px 30px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.card{background:#fff;border-radius:20px;padding:16px;box-shadow:0 2px 0 var(--line),0 8px 24px rgba(160,110,60,.08);position:relative;display:flex;flex-direction:column;gap:12px}
+.card.done{box-shadow:0 0 0 3px var(--accent2),0 8px 24px rgba(160,110,60,.12)}
+.top{display:flex;align-items:center;gap:10px}
+.avatar{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:"Jua";font-size:16px;color:#fff;flex:none}
+.name{font-family:"Jua";font-size:22px;line-height:1.1}
+.meta{font-size:12.5px;color:var(--muted)}
+.top .ghost{margin-left:auto;font-size:18px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.slot{aspect-ratio:1;border-radius:50%;border:2px dashed var(--line);display:grid;place-items:center;user-select:none;position:relative}
+.slot.on{border:none;cursor:pointer}
+.slot.on:hover{transform:scale(1.08)}
+.slot.new{animation:pop .4s ease}
+@keyframes pop{0%{transform:scale(.3)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+.stk{width:100%;height:100%;display:grid;place-items:center;border-radius:50%}
+.stk.color{box-shadow:inset -3px -4px 0 rgba(0,0,0,.12)}
+.stk.color::after{content:"";position:absolute;width:28%;height:20%;top:18%;left:22%;border-radius:50%;background:rgba(255,255,255,.55);transform:rotate(-30deg)}
+.stk.emoji{font-size:clamp(18px,4.2vw,26px);background:#fff4d6}
+.stk.img{background:#fff}
+.stk.img img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+.bar{height:8px;background:#f6ecdf;border-radius:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .3s}
+.actions{display:flex;gap:8px}
+.actions button{flex:1}
+.badge{position:absolute;top:-10px;right:14px;background:var(--accent2);font-family:"Jua";font-size:13px;padding:3px 10px;border-radius:20px}
+.last{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.addcard{border:2.5px dashed #e8d3b8;background:transparent;box-shadow:none;display:grid;place-items:center;min-height:200px;color:var(--muted);font-family:"Jua";font-size:18px;border-radius:20px}
+.overlay{position:fixed;inset:0;background:rgba(60,40,20,.35);display:grid;place-items:center;padding:16px;z-index:10}
+.dialog{background:#fff;border-radius:20px;padding:20px;width:min(460px,100%);display:flex;flex-direction:column;gap:12px;max-height:92vh;overflow:auto}
+.dialog h2{font-family:"Jua";font-weight:400;margin:0;font-size:22px}
+.field{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--muted)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tabs{display:flex;gap:6px}
+.tabs button{flex:1;padding:7px}
+.tabs button.on{background:var(--ink);color:#fff;box-shadow:none}
+.picker{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
+.picker .opt{aspect-ratio:1;padding:3px;border-radius:50%;background:transparent;box-shadow:none;position:relative}
+.picker .opt.sel{box-shadow:0 0 0 3px var(--ink)}
+.picker .opt .stk{position:relative}
+.picker .del{position:absolute;top:-4px;right:-4px;width:18px;height:18px;border-radius:50%;background:#e2574c;color:#fff;font-size:11px;line-height:18px;padding:0;display:none}
+.picker .opt:hover .del{display:block}
+.upload{aspect-ratio:1;border-radius:50%;border:2px dashed var(--line);display:grid;place-items:center;font-size:11px;color:var(--muted);text-align:center;cursor:pointer;line-height:1.2}
+.upload input{display:none}
+.preview{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.preview .slot{width:44px;border:none}
+.row{display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.log li{display:flex;gap:8px;align-items:center;padding:6px 8px;background:#fffaf2;border-radius:10px}
+.log li .slot{width:26px;flex:none;border:none}
+.log li .t{flex:1;min-width:0}
+.log li .d{color:var(--muted);font-size:12px;white-space:nowrap}
+.err{color:#d9473c;font-size:13px;min-height:16px}
+.note{font-size:12.5px;color:var(--muted);text-align:center;padding:0 20px 24px}
+.loading{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:20px;padding:8px 16px;font-size:13px;z-index:20}
+.center{min-height:70vh;display:grid;place-items:center;text-align:center;color:var(--muted);padding:20px}
+.pinbox{background:#fff;border-radius:20px;padding:24px;width:min(320px,100%);display:flex;flex-direction:column;gap:12px;box-shadow:0 8px 24px rgba(160,110,60,.12)}
+.pinbox input{text-align:center;font-size:22px;letter-spacing:6px}
+</style>
+</head>
+<body>
+<div id="root"><div class="center">불러오는 중…</div></div>
+<script>
+/* ===== 설정 =====
+   API_URL: Apps Script 웹 앱 주소 (비워두면 이 컴퓨터에만 저장되는 체험 모드) */
+const CONFIG = {
+  API_URL: "https://script.google.com/macros/s/AKfycbzwhbGcHajFg2llhmujg5Yh4RVQvLE4bwP6vntmqEpgC2btYc60ZhFSCvSOaDb9jkBe/exec"
+};
+
+(function(){
+  const COLOR_STICKERS=["#ff5d5d","#ff8a3d","#ffc531","#9bd34a","#36c08a","#2fc4d4","#3d8bff","#6f6bff","#a564f0","#f05fb4","#c48a5a","#8a8f99"];
+  const EMOJI_STICKERS=["⭐","🌟","💖","👍","🏆","🎉","🍀","🌈","🔥","💯","🐣","🍭","🍞","🥐","🍩","🍇","🌻","😀"];
+  const AVATAR_COLORS=["#ff8a5c","#5cb8ff","#6cc58b","#b48cf0","#f06c9b","#f2b33d","#3fbfb0","#8f9bff"];
+  const root=document.getElementById("root");
+  const LS={get(k,d){try{const v=localStorage.getItem("praise:"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("praise:"+k,JSON.stringify(v))}catch(e){}}};
+  const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+  const DEMO=!CONFIG.API_URL;
+
+  let data=null, pin=LS.get("pin",""), dialog=null, busy=false, lastNew=null;
+
+  /* ---------- 서버 통신 ---------- */
+  function demoData(){
+    return LS.get("demo",null)||{goal:20,images:[],stickers:[],people:["장경화","정지현","문남현","김건"].map((n,i)=>({id:"d"+i,name:n,color:AVATAR_COLORS[i],boards:0}))};
+  }
+  function demoApply(b){
+    const d=demoData(), id=Math.random().toString(36).slice(2,10), p=d.people.find(x=>x.id===b.personId);
+    switch(b.action){
+      case "addSticker": d.stickers.push({id,personId:b.personId,date:b.date,reason:b.reason,giver:b.giver,sticker:b.sticker,board:p.boards});break;
+      case "deleteSticker": d.stickers=d.stickers.filter(s=>s.id!==b.stickerId);break;
+      case "addPerson": d.people.push({id,name:b.name,color:b.color,boards:0});break;
+      case "renamePerson": p.name=b.name;break;
+      case "deletePerson": d.people=d.people.filter(x=>x!==p);break;
+      case "newBoard": p.boards++;break;
+      case "setGoal": d.goal=+b.goal;break;
+      case "addImage": d.images.push({id,name:b.name,src:b.src});break;
+      case "deleteImage": d.images=d.images.filter(x=>x.id!==b.imageId);break;
+    }
+    LS.set("demo",d);return d;
+  }
+  async function load(){
+    if(DEMO){data=demoData();return;}
+    const r=await fetch(CONFIG.API_URL,{method:"GET"});
+    const j=await r.json(); if(!j.ok) throw new Error(j.error||"load"); data=j.data;
+  }
+  async function call(body){
+    body.pin=pin;
+    if(DEMO){data=demoApply(body);return {ok:true};}
+    const r=await fetch(CONFIG.API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});
+    const j=await r.json();
+    if(j.ok&&j.data) data=j.data;
+    return j;
+  }
+  async function act(body,after){
+    if(busy) return; busy=true; showLoading("저장 중…");
+    try{
+      const j=await call(body);
+      if(!j.ok){
+        if(j.error==="pin"){pin="";LS.set("pin","");dialog=null;return render();}
+        alertMsg(j.error||"저장에 실패했어요");return;
+      }
+      if(after) after(); else dialog=null;
+    }catch(e){alertMsg("인터넷 연결이나 서버를 확인해 주세요");}
+    finally{busy=false;hideLoading();render();}
+  }
+  function showLoading(t){let el=document.getElementById("loading");if(!el){el=document.createElement("div");el.id="loading";el.className="loading";document.body.appendChild(el);}el.textContent=t;}
+  function hideLoading(){const el=document.getElementById("loading");if(el)el.remove();}
+  function alertMsg(t){const el=document.getElementById("err");if(el)el.textContent=t;else{showLoading("⚠ "+t);setTimeout(hideLoading,2500);}}
+
+  /* ---------- 스티커 그리기 ---------- */
+  function stk(code){
+    code=String(code||"");
+    if(code.startsWith("c:")) return '<div class="stk color" style="background:'+esc(code.slice(2))+'"></div>';
+    if(code.startsWith("e:")) return '<div class="stk emoji">'+esc(code.slice(2))+'</div>';
+    if(code.startsWith("i:")){
+      const im=(data.images||[]).find(x=>x.id===code.slice(2));
+      return im?'<div class="stk img"><img alt="" src="'+esc(im.src)+'"></div>':'<div class="stk emoji">❔</div>';
+    }
+    return '<div class="stk emoji">'+esc(code)+'</div>';
+  }
+  const current=p=>data.stickers.filter(s=>s.personId===p.id&&s.board===p.boards);
+  const find=id=>data.people.find(p=>p.id===id);
+
+  /* ---------- 화면 ---------- */
+  function render(){
+    if(!DEMO&&!pin) return renderPin();
+    if(!data) return;
+    const g=data.goal;
+    let h='<header><div><h1>칭찬<span>스티커</span> 판</h1><div class="sub">잘한 일이 있으면 날짜와 사유를 적고 스티커를 붙여주세요'+(DEMO?' · <b>체험 모드</b>(이 컴퓨터에만 저장)':'')+'</div></div>'+
+      '<div class="tools"><label class="goal">한 판 목표 <select id="goal">'+[10,15,20,25,30].map(n=>'<option'+(n===g?' selected':'')+'>'+n+'</option>').join("")+'</select> 개</label>'+
+      '<button data-act="refresh" title="새로고침">⟳</button><button class="primary" data-act="addPerson">+ 사람 추가</button></div></header><main>';
+    data.people.forEach(p=>{
+      const cur=current(p), n=cur.length, done=n>=g, slots=[];
+      for(let i=0;i<Math.max(g,n);i++){
+        const s=cur[i];
+        slots.push(s?'<div class="slot on'+(s.id===lastNew?' new':'')+'" data-act="detail" data-id="'+esc(s.id)+'" title="'+esc(s.date+" · "+(s.reason||"")+(s.giver?" (from "+s.giver+")":""))+'">'+stk(s.sticker)+'</div>':'<div class="slot"></div>');
+      }
+      const last=cur[n-1];
+      h+='<section class="card'+(done?' done':'')+'">'+(p.boards?'<div class="badge">🏆 완성 '+p.boards+'판</div>':'')+
+        '<div class="top"><div class="avatar" style="background:'+esc(p.color)+'">'+esc(p.name.length>2?p.name.slice(-2):p.name)+'</div>'+
+        '<div><div class="name">'+esc(p.name)+'</div><div class="meta">'+n+' / '+g+' 개'+(done?' · 판 완성! 🎉':'')+'</div></div>'+
+        '<button class="ghost" title="기록·관리" data-act="manage" data-id="'+esc(p.id)+'">⋯</button></div>'+
+        '<div class="grid">'+slots.join("")+'</div><div class="bar"><i style="width:'+Math.min(100,n/g*100)+'%"></i></div>'+
+        '<div class="last">'+(last?'최근: '+esc(last.date.slice(5).replace("-","/"))+' '+esc(last.reason||"(사유 없음)"):'아직 스티커가 없어요')+'</div>'+
+        '<div class="actions">'+(done?'<button class="primary" data-act="newBoard" data-id="'+esc(p.id)+'">새 판 시작</button>':'<button class="primary" data-act="give" data-id="'+esc(p.id)+'">⭐ 스티커 붙이기</button>')+'</div></section>';
+    });
+    h+='<button class="addcard" data-act="addPerson">+ 사람 추가</button></main>'+
+       '<div class="note">붙인 스티커를 누르면 날짜·사유를 보고 뗄 수 있어요 · ⋯ 버튼: 전체 기록, 이름 변경, 삭제</div>';
+    if(dialog) h+='<div class="overlay" data-act="close"><div class="dialog">'+dialog.html()+'</div></div>';
+    const keep={};document.querySelectorAll(".dialog [id]").forEach(el=>{if(el.value!==undefined&&el.type!=="file")keep[el.id]=el.value;});
+    root.innerHTML=h;
+    Object.keys(keep).forEach(id=>{const el=document.getElementById(id);if(el&&dialog&&dialog.keep!==false)el.value=keep[id];});
+    if(dialog&&dialog.focus){const f=document.getElementById(dialog.focus);if(f&&!f.value)f.focus();}
+    lastNew=null;
+  }
+  function renderPin(){
+    root.innerHTML='<div class="center"><form class="pinbox" id="pinform"><h1 style="font-size:26px">칭찬<span style="color:var(--accent)">스티커</span> 판</h1>'+
+      '<div class="sub">PIN 번호를 입력해 주세요</div><input id="pin" inputmode="numeric" autocomplete="off" maxlength="12"><div class="err" id="err"></div><button class="primary">들어가기</button></form></div>';
+    document.getElementById("pin").focus();
+    document.getElementById("pinform").onsubmit=async e=>{
+      e.preventDefault();const v=document.getElementById("pin").value.trim();if(!v)return;
+      pin=v;showLoading("확인 중…");
+      try{const j=await call({action:"checkPin"});hideLoading();
+        if(j.ok){LS.set("pin",pin);await start();}else{pin="";document.getElementById("err").textContent="PIN이 맞지 않아요";}
+      }catch(err){hideLoading();pin="";document.getElementById("err").textContent="서버에 연결할 수 없어요";}
+    };
+  }
+
+  /* ---------- 창 ---------- */
+  function giveDialog(p){
+    let tab=LS.get("tab","color"), sel=LS.get("lastSticker","c:#ffc531");
+    dialog={focus:"reason",html(){
+      const imgs=data.images||[];
+      let opts="";
+      if(tab==="color") opts=COLOR_STICKERS.map(c=>"c:"+c).map(o=>'<button class="opt'+(o===sel?' sel':'')+'" data-pick="'+o+'">'+stk(o)+'</button>').join("");
+      if(tab==="emoji") opts=EMOJI_STICKERS.map(c=>"e:"+c).map(o=>'<button class="opt'+(o===sel?' sel':'')+'" data-pick="'+o+'">'+stk(o)+'</button>').join("");
+      if(tab==="img") opts=imgs.map(im=>"i:"+im.id).map(o=>'<button class="opt'+(o===sel?' sel':'')+'" data-pick="'+o+'">'+stk(o)+'<span class="del" data-delimg="'+o.slice(2)+'" title="이미지 삭제">✕</span></button>').join("")+
+        '<label class="upload">+ 이미지<br>올리기<input type="file" accept="image/*" id="upimg"></label>';
+      return '<h2>'+esc(p.name)+'에게 칭찬스티커</h2>'+
+        '<div class="two"><label class="field">날짜<input type="date" id="date" value="'+today()+'"></label>'+
+        '<label class="field">붙이는 사람 (선택)<input id="giver" maxlength="30" value="'+esc(LS.get("giver",""))+'" placeholder="예: 거니"></label></div>'+
+        '<label class="field">칭찬 사유<textarea id="reason" rows="2" maxlength="200" placeholder="예: 견적서 마감 하루 일찍 끝냄"></textarea></label>'+
+        '<div class="field">스티커 고르기</div>'+
+        '<div class="tabs"><button data-tab="color" class="'+(tab==="color"?"on":"")+'">🎨 색상</button><button data-tab="emoji" class="'+(tab==="emoji"?"on":"")+'">😀 이모지</button><button data-tab="img" class="'+(tab==="img"?"on":"")+'">🖼 내 이미지</button></div>'+
+        '<div class="picker">'+opts+'</div>'+
+        '<div class="preview"><div class="slot on">'+stk(sel)+'</div>이 스티커를 붙여요</div>'+
+        '<div class="err" id="err"></div>'+
+        '<div class="row"><button data-act="close">취소</button><button class="primary" data-act="confirmGive" data-id="'+esc(p.id)+'">붙이기</button></div>';
+    },
+    pick(o){sel=o;},tabTo(t){tab=t;LS.set("tab",t);},sel:()=>sel,personId:p.id};
+    render();
+  }
+  function nameDialog(p){
+    dialog={focus:"pname",html(){return '<h2>'+(p?'이름 바꾸기':'사람 추가')+'</h2><input id="pname" maxlength="20" placeholder="이름" value="'+(p?esc(p.name):'')+'">'+
+      '<div class="err" id="err"></div><div class="row"><button data-act="close">취소</button><button class="primary" data-act="confirmName" data-id="'+(p?esc(p.id):'')+'">'+(p?'저장':'추가')+'</button></div>';}};
+    render();
+  }
+  function manageDialog(p,confirmDel){
+    const all=data.stickers.filter(s=>s.personId===p.id).slice().reverse();
+    dialog={keep:false,html(){
+      const log=all.map(s=>'<li><div class="slot on">'+stk(s.sticker)+'</div><div class="t">'+esc(s.reason||"(사유 없음)")+(s.giver?' <span class="d">from '+esc(s.giver)+'</span>':'')+'</div><span class="d">'+esc(s.date)+'</span></li>').join("")||'<li>기록이 없어요</li>';
+      return '<h2>'+esc(p.name)+'</h2><div class="meta">이번 판 '+current(p).length+'개 · 완성한 판 '+p.boards+'개 · 전체 '+all.length+'개</div><ul class="log">'+log+'</ul><div class="err" id="err"></div>'+
+        (confirmDel?'<div class="row"><span style="margin-right:auto">정말 삭제할까요? (기록은 구글 시트에 남아요)</span><button data-act="manage" data-id="'+esc(p.id)+'">아니요</button><button class="danger" data-act="confirmDelete" data-id="'+esc(p.id)+'">삭제</button></div>'
+        :'<div class="row"><button class="ghost" data-act="askDelete" data-id="'+esc(p.id)+'" style="margin-right:auto">사람 삭제</button><button data-act="rename" data-id="'+esc(p.id)+'">이름 바꾸기</button><button class="primary" data-act="close">닫기</button></div>');
+    }};
+    render();
+  }
+  function detailDialog(s){
+    const p=find(s.personId);
+    dialog={keep:false,html(){return '<h2>'+esc(p?p.name:"")+'의 스티커</h2><div class="preview"><div class="slot on" style="width:60px">'+stk(s.sticker)+'</div><div><div>'+esc(s.date)+(s.giver?' · from '+esc(s.giver):'')+'</div><div style="color:var(--ink);font-size:15px">'+esc(s.reason||"(사유 없음)")+'</div></div></div>'+
+      '<div class="err" id="err"></div><div class="row"><button class="ghost" data-act="delSticker" data-id="'+esc(s.id)+'" style="margin-right:auto">이 스티커 떼기</button><button class="primary" data-act="close">닫기</button></div>';}};
+    render();
+  }
+
+  /* ---------- 이미지 줄이기 ---------- */
+  function shrink(file){
+    return new Promise((res,rej)=>{
+      const rd=new FileReader();
+      rd.onerror=rej;
+      rd.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{
+        for(const S of [128,100,80,64]){
+          const k=Math.min(1,S/Math.max(im.width,im.height)),cv=document.createElement("canvas");
+          cv.width=Math.max(1,Math.round(im.width*k));cv.height=Math.max(1,Math.round(im.height*k));
+          cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);
+          let url=cv.toDataURL("image/webp",0.85); if(!url.startsWith("data:image/webp")) url=cv.toDataURL("image/png");
+          if(url.length<45000) return res(url);
+        }
+        rej(new Error("too big"));
+      };im.src=rd.result;};
+      rd.readAsDataURL(file);
+    });
+  }
+
+  /* ---------- 이벤트 ---------- */
+  root.addEventListener("change",async e=>{
+    if(e.target.id==="goal") return act({action:"setGoal",goal:+e.target.value});
+    if(e.target.id==="upimg"&&e.target.files[0]){
+      const f=e.target.files[0];
+      try{
+        const src=await shrink(f);
+        const before=new Set((data.images||[]).map(x=>x.id));
+        await act({action:"addImage",name:f.name,src},()=>{
+          const added=(data.images||[]).find(x=>!before.has(x.id));
+          if(added&&dialog&&dialog.pick) dialog.pick("i:"+added.id);
+        });
+      }catch(err){alertMsg("이미지를 읽을 수 없어요");}
+    }
+  });
+  root.addEventListener("keydown",e=>{
+    if(e.key==="Escape"&&dialog){dialog=null;render();}
+    if(e.key==="Enter"&&e.target.id==="pname"){const b=root.querySelector('[data-act="confirmName"]');if(b)b.click();}
+  });
+  root.addEventListener("click",e=>{
+    if(busy) return;
+    const del=e.target.closest("[data-delimg]");
+    if(del){e.stopPropagation();
+      const id=del.dataset.delimg;
+      if(data.stickers.some(s=>s.sticker==="i:"+id)) return alertMsg("이미 붙인 스티커에 쓰인 이미지라 지울 수 없어요");
+      return act({action:"deleteImage",imageId:id},()=>{if(dialog.sel()==="i:"+id)dialog.pick("c:#ffc531");});
+    }
+    const pk=e.target.closest("[data-pick]"); if(pk&&dialog){dialog.pick(pk.dataset.pick);return render();}
+    const tb=e.target.closest("[data-tab]"); if(tb&&dialog){dialog.tabTo(tb.dataset.tab);return render();}
+    const b=e.target.closest("[data-act]"); if(!b) return;
+    if(b.classList.contains("overlay")&&e.target!==b) return;
+    const act_=b.dataset.act, id=b.dataset.id, p=find(id);
+    if(act_==="close"){dialog=null;return render();}
+    if(act_==="refresh"){showLoading("불러오는 중…");return load().then(render).catch(()=>alertMsg("불러오기 실패")).finally(hideLoading);}
+    if(act_==="give") return giveDialog(p);
+    if(act_==="confirmGive"){
+      const date=document.getElementById("date").value||today(), reason=document.getElementById("reason").value.trim(), giver=document.getElementById("giver").value.trim();
+      if(!reason) return alertMsg("칭찬 사유를 적어주세요");
+      LS.set("giver",giver);LS.set("lastSticker",dialog.sel());
+      const before=new Set(data.stickers.map(s=>s.id));
+      return act({action:"addSticker",personId:id,date,reason,giver,sticker:dialog.sel()},()=>{
+        const n=data.stickers.find(s=>!before.has(s.id)); if(n) lastNew=n.id; dialog=null;
+      });
+    }
+    if(act_==="detail"){const s=data.stickers.find(x=>x.id===id);if(s)detailDialog(s);return;}
+    if(act_==="delSticker") return act({action:"deleteSticker",stickerId:id});
+    if(act_==="newBoard") return act({action:"newBoard",personId:id});
+    if(act_==="addPerson") return nameDialog(null);
+    if(act_==="rename") return nameDialog(p);
+    if(act_==="confirmName"){
+      const v=document.getElementById("pname").value.trim(); if(!v) return alertMsg("이름을 적어주세요");
+      if(p) return act({action:"renamePerson",personId:id,name:v});
+      const used=data.people.map(x=>x.color);
+      const color=AVATAR_COLORS.find(c=>!used.includes(c))||AVATAR_COLORS[data.people.length%AVATAR_COLORS.length];
+      return act({action:"addPerson",name:v,color});
+    }
+    if(act_==="manage") return manageDialog(p,false);
+    if(act_==="askDelete") return manageDialog(p,true);
+    if(act_==="confirmDelete") return act({action:"deletePerson",personId:id});
+  });
+
+  async function start(){
+    try{await load();render();}
+    catch(e){root.innerHTML='<div class="center">서버에 연결할 수 없어요.<br>잠시 후 새로고침해 주세요.</div>';}
+  }
+  if(!DEMO&&!pin) render(); else start();
+  setInterval(()=>{if(!dialog&&!busy&&!document.hidden&&(DEMO||pin)) load().then(render).catch(()=>{});},60000);
+})();
+</script>
+</body>
+</html>
