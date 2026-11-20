@@ -3,10 +3,12 @@
  *
  * 처음 한 번: 위 메뉴에서 setup 함수를 선택하고 ▶실행 → 권한 허용
  * 그 다음: 배포 → 새 배포 → 유형 "웹 앱", 실행 계정 "나", 액세스 "모든 사용자"
- * PIN 바꾸기: changePin 함수 안의 숫자를 바꾸고 ▶실행
+ * PIN 바꾸기: changePin 함수 안의 값을 바꾸고 ▶실행
  */
 
-var DEFAULT_PIN = '1234';
+var DEFAULT_PIN = 'CHANGE_ME'; // 실제 PIN은 changePin으로 설정 (공개 저장소에 적지 않음)
+// PIN 없이 할 수 있는 작업 (스티커 붙이기, 이미지 올리기). 나머지 수정은 PIN 필요
+var OPEN_ACTIONS = ['addSticker', 'addImage'];
 var DEFAULT_PEOPLE = ['장경화', '정지현', '문남현', '김건'];
 var COLORS = ['#ff8a5c', '#5cb8ff', '#6cc58b', '#b48cf0', '#f06c9b', '#f2b33d', '#3fbfb0', '#8f9bff'];
 
@@ -25,7 +27,7 @@ function setup() {
 }
 
 function changePin() {
-  var NEW_PIN = '1234'; // ← 여기 숫자를 바꾸고 실행
+  var NEW_PIN = '새PIN'; // ← 여기 값을 바꾸고 실행
   PropertiesService.getScriptProperties().setProperty('PIN', String(NEW_PIN));
   Logger.log('PIN 변경 완료: ' + NEW_PIN);
 }
@@ -103,7 +105,7 @@ function doGet(e) {
 function doPost(e) {
   var body;
   try { body = JSON.parse(e.postData.contents); } catch (err) { return out_({ ok: false, error: 'bad_request' }); }
-  if (String(body.pin) !== getPin_()) return out_({ ok: false, error: 'pin' });
+  if (OPEN_ACTIONS.indexOf(body.action) < 0 && String(body.pin) !== getPin_()) return out_({ ok: false, error: 'pin' });
 
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);

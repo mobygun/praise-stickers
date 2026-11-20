@@ -102,7 +102,8 @@ const CONFIG = {
   const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
   const DEMO=!CONFIG.API_URL;
 
-  let data=null, pin=LS.get("pin",""), dialog=null, busy=false, lastNew=null;
+  let data=null, pin="", dialog=null, busy=false, lastNew=null;
+  const PROTECTED=new Set(["deleteSticker","addPerson","renamePerson","deletePerson","newBoard","setGoal","deleteImage"]);
 
   /* ---------- 서버 통신 ---------- */
   function demoData(){
@@ -137,16 +138,19 @@ const CONFIG = {
     return j;
   }
   async function act(body,after){
-    if(busy) return; busy=true; showLoading("저장 중…");
+    if(busy) return;
+    if(!DEMO&&PROTECTED.has(body.action)&&!pin) return pinDialog(()=>act(body,after));
+    busy=true; showLoading("저장 중…");
+    let retryPin=false;
     try{
       const j=await call(body);
       if(!j.ok){
-        if(j.error==="pin"){pin="";LS.set("pin","");dialog=null;return render();}
+        if(j.error==="pin"){pin="";retryPin=true;return;}
         alertMsg(j.error||"저장에 실패했어요");return;
       }
       if(after) after(); else dialog=null;
     }catch(e){alertMsg("인터넷 연결이나 서버를 확인해 주세요");}
-    finally{busy=false;hideLoading();render();}
+    finally{busy=false;hideLoading();if(retryPin)pinDialog(()=>act(body,after),"PIN이 맞지 않아요");else render();}
   }
   function showLoading(t){let el=document.getElementById("loading");if(!el){el=document.createElement("div");el.id="loading";el.className="loading";document.body.appendChild(el);}el.textContent=t;}
   function hideLoading(){const el=document.getElementById("loading");if(el)el.remove();}
@@ -168,12 +172,11 @@ const CONFIG = {
 
   /* ---------- 화면 ---------- */
   function render(){
-    if(!DEMO&&!pin) return renderPin();
     if(!data) return;
     const g=data.goal;
     let h='<header><div><h1>칭찬<span>스티커</span> 판</h1><div class="sub">잘한 일이 있으면 날짜와 사유를 적고 스티커를 붙여주세요'+(DEMO?' · <b>체험 모드</b>(이 컴퓨터에만 저장)':'')+'</div></div>'+
       '<div class="tools"><label class="goal">한 판 목표 <select id="goal">'+[10,15,20,25,30].map(n=>'<option'+(n===g?' selected':'')+'>'+n+'</option>').join("")+'</select> 개</label>'+
-      '<button data-act="refresh" title="새로고침">⟳</button><button class="primary" data-act="addPerson">+ 사람 추가</button></div></header><main>';
+      '<button data-act="refresh" title="새로고침">⟳</button>'+(pin?'<button class="ghost" data-act="lock" title="수정 잠그기">🔓</button>':'')+'<button class="primary" data-act="addPerson">+ 사람 추가</button></div></header><main>';
     data.people.forEach(p=>{
       const cur=current(p), n=cur.length, done=n>=g, slots=[];
       for(let i=0;i<Math.max(g,n);i++){
@@ -198,17 +201,11 @@ const CONFIG = {
     if(dialog&&dialog.focus){const f=document.getElementById(dialog.focus);if(f&&!f.value)f.focus();}
     lastNew=null;
   }
-  function renderPin(){
-    root.innerHTML='<div class="center"><form class="pinbox" id="pinform"><h1 style="font-size:26px">칭찬<span style="color:var(--accent)">스티커</span> 판</h1>'+
-      '<div class="sub">PIN 번호를 입력해 주세요</div><input id="pin" inputmode="numeric" autocomplete="off" maxlength="12"><div class="err" id="err"></div><button class="primary">들어가기</button></form></div>';
-    document.getElementById("pin").focus();
-    document.getElementById("pinform").onsubmit=async e=>{
-      e.preventDefault();const v=document.getElementById("pin").value.trim();if(!v)return;
-      pin=v;showLoading("확인 중…");
-      try{const j=await call({action:"checkPin"});hideLoading();
-        if(j.ok){LS.set("pin",pin);await start();}else{pin="";document.getElementById("err").textContent="PIN이 맞지 않아요";}
-      }catch(err){hideLoading();pin="";document.getElementById("err").textContent="서버에 연결할 수 없어요";}
-    };
+  function pinDialog(cb,msg){
+    dialog={focus:"pinIn",keep:false,cb,html(){return '<h2>🔒 PIN 입력</h2><div class="meta">수정·삭제는 PIN이 필요해요</div>'+
+      '<input id="pinIn" type="password" autocomplete="off" maxlength="20" placeholder="PIN" style="text-align:center;font-size:20px;letter-spacing:4px">'+
+      '<div class="err" id="err">'+(msg||'')+'</div><div class="row"><button data-act="close">취소</button><button class="primary" data-act="confirmPin">확인</button></div>';}};
+    render();
   }
 
   /* ---------- 창 ---------- */
@@ -293,6 +290,7 @@ const CONFIG = {
   });
   root.addEventListener("keydown",e=>{
     if(e.key==="Escape"&&dialog){dialog=null;render();}
+    if(e.key==="Enter"&&e.target.id==="pinIn"){const b=root.querySelector('[data-act="confirmPin"]');if(b)b.click();}
     if(e.key==="Enter"&&e.target.id==="pname"){const b=root.querySelector('[data-act="confirmName"]');if(b)b.click();}
   });
   root.addEventListener("click",e=>{
@@ -309,6 +307,8 @@ const CONFIG = {
     if(b.classList.contains("overlay")&&e.target!==b) return;
     const act_=b.dataset.act, id=b.dataset.id, p=find(id);
     if(act_==="close"){dialog=null;return render();}
+    if(act_==="confirmPin"){const v=document.getElementById("pinIn").value.trim();if(!v)return alertMsg("PIN을 입력해 주세요");pin=v;const cb=dialog.cb;dialog=null;return cb();}
+    if(act_==="lock"){pin="";return render();}
     if(act_==="refresh"){showLoading("불러오는 중…");return load().then(render).catch(()=>alertMsg("불러오기 실패")).finally(hideLoading);}
     if(act_==="give") return giveDialog(p);
     if(act_==="confirmGive"){
@@ -341,8 +341,8 @@ const CONFIG = {
     try{await load();render();}
     catch(e){root.innerHTML='<div class="center">서버에 연결할 수 없어요.<br>잠시 후 새로고침해 주세요.</div>';}
   }
-  if(!DEMO&&!pin) render(); else start();
-  setInterval(()=>{if(!dialog&&!busy&&!document.hidden&&(DEMO||pin)) load().then(render).catch(()=>{});},60000);
+  start();
+  setInterval(()=>{if(!dialog&&!busy&&!document.hidden) load().then(render).catch(()=>{});},60000);
 })();
 </script>
 </body>
